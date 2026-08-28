@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export function normalizeGeminiBbox(raw) {
   if (!raw || !Array.isArray(raw) || raw.length < 4) {
-    return { x: 0.05, y: 0.05, w: 0.9, h: 0.2 };
+    return { x: 0, y: 0, w: 1, h: 0.1 };
   }
   const [y1, x1, y2, x2] = raw;
   const x = x1 / 1000;
@@ -38,9 +38,9 @@ function normalizeQuestion(raw, index) {
     ? `${number}${part}`
     : `${number}`;
 
-  // Default realistic marks if not provided in printed paper (e.g. 2 or 5)
-  const defaultMarks = Number(number) >= 6 ? 5 : 2;
-  const marks = raw.marks != null ? Number(raw.marks) : defaultMarks;
+  // Preserve only actual extracted marks from question paper (do not hardcode fallback marks)
+  // const defaultMarks = Number(number) >= 6 ? 5 : 2;
+  const marks = raw.marks != null ? Number(raw.marks) : null;
 
   return {
     id: uuidv4(),
@@ -62,7 +62,7 @@ function normalizeAnswerRegion(raw) {
     page: Number(raw.page ?? 1),
     text: String(raw.text ?? raw.answerText ?? ''),
     bbox: normalizeGeminiBbox(raw.bbox ?? raw.boundingBox ?? null),
-    confidence: Number(raw.confidence ?? 0.85),
+    confidence: Number(raw.confidence ?? 0.8),
     questionLabel: raw.questionLabel ?? raw.questionNumber ?? null,
   };
 }
@@ -85,7 +85,8 @@ export function normalizeExtractionResponse(raw) {
 }
 
 /**
- * Build mappings from questions to answer regions with comprehensive label normalization.
+ * Build mappings from questions to answer regions.
+ * Uses strongest-evidence-first strategy.
  */
 export function buildMappings(questions, answerRegions) {
   const mappings = [];

@@ -9,7 +9,7 @@ import {
 } from '@hugeicons/core-free-icons';
 
 /**
- * QuestionList — renders question cards matching Figma spec (img-2)
+ * QuestionList — renders question cards matching Figma spec
  */
 export default function QuestionList({
   questions = [],
@@ -31,24 +31,48 @@ export default function QuestionList({
   };
 
   function getScoreBadge(q) {
-    const marks = q.marks || 2;
+    // 1. If marks were actually extracted from the question paper:
+    if (q.marks != null) {
+      if (q.status === 'matched') {
+        return (
+          <span className="question-item-badge badge-matched">
+            {q.marks}/{q.marks}
+          </span>
+        );
+      }
+      if (q.status === 'unanswered') {
+        return (
+          <span className="question-item-badge badge-unanswered">
+            0/{q.marks}
+          </span>
+        );
+      }
+      return (
+        <span className="question-item-badge badge-ambiguous">
+          {q.marks} marks
+        </span>
+      );
+    }
+
+    // 2. If question paper did not specify marks, display the actual status badge:
+    // const marks = q.marks || 2; // (commented out hardcoded fallback marks)
     if (q.status === 'matched') {
       return (
         <span className="question-item-badge badge-matched">
-          {marks}/{marks}
+          Matched
         </span>
       );
     }
     if (q.status === 'unanswered') {
       return (
         <span className="question-item-badge badge-unanswered">
-          0/{marks}
+          No Answer
         </span>
       );
     }
     return (
       <span className="question-item-badge badge-ambiguous">
-        1/{marks}
+        Ambiguous
       </span>
     );
   }
@@ -92,7 +116,7 @@ export default function QuestionList({
                 className={`question-item ${isSelected ? 'selected' : ''}`}
                 onClick={() => onSelect?.(q)}
               >
-                {/* Top Row: Left circle number, Right score badge + Chevron */}
+                {/* Top Row: Left circle number, Right score/status badge + Chevron */}
                 <div className="question-item-top">
                   <div className="question-item-num">
                     {q.part ? `${q.number}${q.part}` : q.displayNumber}

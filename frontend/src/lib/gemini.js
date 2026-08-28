@@ -1,6 +1,6 @@
 /**
  * Gemini API client — server-side only.
- * Uses @google/generative-ai SDK with deterministic low temperature for consistent extraction.
+ * Uses @google/generative-ai SDK.
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -20,10 +20,9 @@ export function getModel(modelName = MODEL_NAME) {
     model: modelName,
     generationConfig: {
       responseMimeType: 'application/json',
-      // Low temperature is CRITICAL for deterministic and consistent extraction
-      temperature: 0.1,
-      topP: 0.8,
-      topK: 20,
+      // temperature: 0.1,
+      // topP: 0.8,
+      // topK: 20,
     },
   });
 }
