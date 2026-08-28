@@ -11,7 +11,7 @@ A web application for teachers to upload a question paper and a student's handwr
 ## Features
 
 - **Upload** — Drag-and-drop or click to upload question paper + answer sheet (PDF or images)
-- **AI Extraction** — Gemini 2.0 Flash multimodal model extracts all questions and finds answer regions
+- **AI Extraction** — Gemini 3.6 Flash multimodal model extracts all questions and finds answer regions
 - **Answer Mapping** — Questions are automatically matched to answer regions using explicit question labels
 - **Exact Highlighting** — Clicking a question scrolls to and highlights the exact handwritten answer region
 - **Status Tracking** — Questions are shown as Answered, No Answer, or Ambiguous
@@ -151,7 +151,7 @@ The API key is **only used server-side** and never exposed to the browser.
 |-------|-----------|
 | Framework | Next.js 16 (App Router) |
 | Language | JavaScript (no TypeScript) |
-| AI | Gemini 2.0 Flash (multimodal) |
+| AI | Gemini 3.6 Flash (multimodal) |
 | Icons | @hugeicons/react & @hugeicons/core-free-icons |
 | PDF Rendering | pdfjs-dist (client-side) |
 | Styling | Vanilla CSS + CSS custom properties |
