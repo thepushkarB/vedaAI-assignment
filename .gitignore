@@ -1,0 +1,25 @@
+# Frontend dependencies & build files
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+frontend/coverage/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.env.local
+frontend/.env*.local
+
+# Backend dependencies & virtual environment
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+
+# skill files
+.agent/
+
+# OS files
+.DS_Store
+Thumbs.db
