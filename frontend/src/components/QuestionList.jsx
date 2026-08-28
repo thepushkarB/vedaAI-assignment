@@ -6,12 +6,10 @@ import {
   Alert01Icon,
   ArrowDown01Icon,
   ArrowUp01Icon,
-  SparklesIcon,
 } from '@hugeicons/core-free-icons';
 
 /**
- * QuestionList — displays extracted questions with mapping status matching Figma reference.
- * Supports active selection, expandable AI feedback, and responsive layout.
+ * QuestionList — renders question cards matching Figma spec (img-2)
  */
 export default function QuestionList({
   questions = [],
@@ -21,10 +19,8 @@ export default function QuestionList({
   unmatchedRegions = [],
   className = '',
 }) {
-  const [expandedAll, setExpandedAll] = useState(false);
   const [expandedMap, setExpandedMap] = useState({});
 
-  // Build a quick lookup: questionId → mapping
   const mappingByQuestionId = Object.fromEntries(
     mappings.map((m) => [m.questionId, m])
   );
@@ -34,19 +30,9 @@ export default function QuestionList({
     setExpandedMap((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleToggleExpandAll = () => {
-    const next = !expandedAll;
-    setExpandedAll(next);
-    const newMap = {};
-    questions.forEach((q) => {
-      newMap[q.id] = next;
-    });
-    setExpandedMap(newMap);
-  };
-
   function getScoreBadge(q) {
+    const marks = q.marks || 2;
     if (q.status === 'matched') {
-      const marks = q.marks || 2;
       return (
         <span className="question-item-badge badge-matched">
           {marks}/{marks}
@@ -54,7 +40,6 @@ export default function QuestionList({
       );
     }
     if (q.status === 'unanswered') {
-      const marks = q.marks || 2;
       return (
         <span className="question-item-badge badge-unanswered">
           0/{marks}
@@ -63,7 +48,7 @@ export default function QuestionList({
     }
     return (
       <span className="question-item-badge badge-ambiguous">
-        1/3
+        1/{marks}
       </span>
     );
   }
@@ -71,36 +56,7 @@ export default function QuestionList({
   return (
     <div className={`question-panel ${className}`}>
       <div className="question-panel-header">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <div className="question-panel-title">Extracted Questions (from question paper)</div>
-            {questions.length > 0 && (
-              <div className="question-panel-sub" style={{ marginTop: 2 }}>
-                {questions.filter((q) => q.status === 'matched').length} of {questions.length} questions answered
-              </div>
-            )}
-          </div>
-
-          {questions.length > 0 && (
-            <button
-              type="button"
-              onClick={handleToggleExpandAll}
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: 'var(--color-text-secondary)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-full)',
-                padding: '3px 10px',
-                background: 'white',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              {expandedAll ? 'Collapse All' : 'Expand All'}
-            </button>
-          )}
-        </div>
+        <div className="question-panel-title">Extracted Questions (from question paper)</div>
       </div>
 
       <div className="question-list">
@@ -108,7 +64,7 @@ export default function QuestionList({
           <div className="unmatched-banner" style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
             <HugeiconsIcon icon={Alert01Icon} size={16} style={{ flexShrink: 0, marginTop: 1 }} />
             <span>
-              {unmatchedRegions.length} answer region{unmatchedRegions.length > 1 ? 's' : ''} detected without matching questions.
+              {unmatchedRegions.length} answer region{unmatchedRegions.length > 1 ? 's' : ''} could not be matched to any question
             </span>
           </div>
         )}
@@ -136,10 +92,10 @@ export default function QuestionList({
                 className={`question-item ${isSelected ? 'selected' : ''}`}
                 onClick={() => onSelect?.(q)}
               >
-                {/* Top row: Number circle, Score badge, Chevron */}
+                {/* Top Row: Left circle number, Right score badge + Chevron */}
                 <div className="question-item-top">
                   <div className="question-item-num">
-                    {q.part ? `${q.number} ${q.part}.` : q.displayNumber}
+                    {q.part ? `${q.number}${q.part}` : q.displayNumber}
                   </div>
 
                   <div className="question-item-right-actions">
@@ -147,43 +103,32 @@ export default function QuestionList({
                     <button
                       type="button"
                       onClick={(e) => toggleExpand(q.id, e)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--color-text-muted)',
-                        padding: '2px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
+                      className="question-chevron-btn"
                       aria-label={isExpanded ? 'Collapse' : 'Expand'}
                     >
                       <HugeiconsIcon
                         icon={isExpanded ? ArrowUp01Icon : ArrowDown01Icon}
-                        size={15}
+                        size={16}
                       />
                     </button>
                   </div>
                 </div>
 
-                {/* Question body text */}
+                {/* Question text below */}
                 <div className="question-item-text">{q.text}</div>
 
-                {/* Expanded AI feedback block */}
+                {/* AI Feedback card when expanded */}
                 {isExpanded && (
                   <div className="question-feedback-box">
-                    <div className="question-feedback-title">
-                      AI Feedback
-                    </div>
+                    <div className="question-feedback-title">AI Feedback</div>
                     <div className="question-feedback-body">
                       {mapping?.status === 'matched' ? (
                         <>
-                          Excellent work! Corresponding answer region identified and highlighted on the answer sheet.
+                          Excellent work! Corresponding answer identified and highlighted on the answer sheet.
                         </>
                       ) : (
                         <>
-                          No corresponding answer detected on the student answer sheet.
+                          No corresponding answer detected for this question on the answer sheet.
                         </>
                       )}
                     </div>

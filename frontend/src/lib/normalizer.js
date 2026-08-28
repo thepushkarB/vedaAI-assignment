@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export function normalizeGeminiBbox(raw) {
   if (!raw || !Array.isArray(raw) || raw.length < 4) {
-    return { x: 0, y: 0, w: 1, h: 0.1 };
+    return { x: 0.05, y: 0.05, w: 0.9, h: 0.2 };
   }
   const [y1, x1, y2, x2] = raw;
   const x = x1 / 1000;
@@ -38,13 +38,17 @@ function normalizeQuestion(raw, index) {
     ? `${number}${part}`
     : `${number}`;
 
+  // Default realistic marks if not provided in printed paper (e.g. 2 or 5)
+  const defaultMarks = Number(number) >= 6 ? 5 : 2;
+  const marks = raw.marks != null ? Number(raw.marks) : defaultMarks;
+
   return {
     id: uuidv4(),
-    number: Number(number),
-    part: part ? String(part) : null,
+    number: Number(number) || index + 1,
+    part: part ? String(part).trim() : null,
     displayNumber,
     text: String(raw.text ?? raw.questionText ?? ''),
-    marks: raw.marks != null ? Number(raw.marks) : null,
+    marks,
     status: 'unanswered', // default; mapping step will update
   };
 }
@@ -58,19 +62,13 @@ function normalizeAnswerRegion(raw) {
     page: Number(raw.page ?? 1),
     text: String(raw.text ?? raw.answerText ?? ''),
     bbox: normalizeGeminiBbox(raw.bbox ?? raw.boundingBox ?? null),
-    confidence: Number(raw.confidence ?? 0.8),
+    confidence: Number(raw.confidence ?? 0.85),
     questionLabel: raw.questionLabel ?? raw.questionNumber ?? null,
   };
 }
 
 /**
  * Normalize the full Gemini response into application data structures.
- *
- * Expected raw shape:
- * {
- *   questions: [...],
- *   answerRegions: [...],
- * }
  */
 export function normalizeExtractionResponse(raw) {
   if (!raw || typeof raw !== 'object') {
@@ -87,51 +85,52 @@ export function normalizeExtractionResponse(raw) {
 }
 
 /**
- * Build mappings from questions to answer regions.
- * Uses strongest-evidence-first strategy:
- *  1. Explicit question label match (e.g., "Q1", "1", "11a")
- *  2. Semantic/position fallback
- *  3. Unmatched
- *
- * Returns { questions (with status), answerRegions, mappings }
+ * Build mappings from questions to answer regions with comprehensive label normalization.
  */
 export function buildMappings(questions, answerRegions) {
   const mappings = [];
   const usedRegionIds = new Set();
 
-  // Build a lookup: normalized label → question
+  // Helper to normalize any label string: "Q1(a)" -> "1a", "Q. 5 (ii)" -> "5ii"
+  const cleanLabel = (str) => {
+    if (!str) return '';
+    return String(str)
+      .toLowerCase()
+      .replace(/^q\./, '')
+      .replace(/^q/, '')
+      .replace(/[\(\)\[\]\.\-_ ]/g, '');
+  };
+
+  // Build a lookup: normalized label -> question
   const questionByLabel = new Map();
   for (const q of questions) {
-    // Register "1", "1a", "11", "11a", "11b" etc.
-    const label1 = String(q.number);
-    const label2 = q.part ? `${q.number}${q.part}` : null;
-    const label3 = q.part ? `${q.number}(${q.part})` : null;
+    const numStr = String(q.number);
+    const partStr = q.part ? String(q.part).toLowerCase() : '';
 
-    questionByLabel.set(label1.toLowerCase(), q);
-    if (label2) questionByLabel.set(label2.toLowerCase(), q);
-    if (label3) questionByLabel.set(label3.toLowerCase(), q);
+    const label1 = cleanLabel(numStr);
+    const label2 = cleanLabel(`${numStr}${partStr}`);
+    const label3 = cleanLabel(`${numStr}(${partStr})`);
+
+    questionByLabel.set(label1, q);
+    if (label2) questionByLabel.set(label2, q);
+    if (label3) questionByLabel.set(label3, q);
   }
 
   // Match answer regions to questions
-  const regionsByQuestion = new Map(); // questionId → answerRegion[]
+  const regionsByQuestion = new Map(); // questionId -> answerRegion[]
 
   for (const region of answerRegions) {
     let matched = null;
 
     if (region.questionLabel != null) {
-      const label = String(region.questionLabel).toLowerCase().trim();
-      // Try exact match
-      matched = questionByLabel.get(label) ?? null;
+      const rawLabel = String(region.questionLabel);
+      const cleaned = cleanLabel(rawLabel);
+
+      matched = questionByLabel.get(cleaned) ?? null;
 
       if (!matched) {
-        // Try stripping "q" prefix: "q1" → "1"
-        const stripped = label.replace(/^q/, '');
-        matched = questionByLabel.get(stripped) ?? null;
-      }
-
-      if (!matched) {
-        // Try just the number part for sub-parts: "1a" matches "1" if no "1a" exists
-        const numOnly = label.replace(/[^0-9]/g, '');
+        // Try matching number-only
+        const numOnly = cleaned.replace(/[^0-9]/g, '');
         matched = questionByLabel.get(numOnly) ?? null;
       }
     }

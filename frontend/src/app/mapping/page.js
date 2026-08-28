@@ -56,7 +56,7 @@ export default function MappingPage() {
     }
 
     const regions = r.answerRegions?.filter((ar) =>
-      mapping.answerRegionIds.includes(ar.id)
+      mapping.answerRegionIds?.includes(ar.id)
     ) || [];
 
     setActiveHighlights(regions);
@@ -69,7 +69,7 @@ export default function MappingPage() {
   const handleSelectAndSwitchTab = (question) => {
     selectQuestion(question);
     // On small screens, smoothly switch to answer sheet to show the highlight
-    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+    if (typeof window !== 'undefined' && window.innerWidth <= 900) {
       setActiveTab('answerSheet');
     }
   };
@@ -106,7 +106,7 @@ export default function MappingPage() {
       <div className="main-content">
         <TopBar breadcrumb="Exams / Mapping" onBack={() => router.push('/')} />
 
-        {/* Mobile / Tablet Segmented Tab Switcher */}
+        {/* Mobile / Tablet Segmented Pill Tab Switcher */}
         <div className="mobile-tab-container">
           <div className="mobile-tab-switcher">
             <button
