@@ -44,7 +44,7 @@ export default function MappingPage() {
 
   function selectQuestion(question, data) {
     const r = data ?? result;
-    if (!r) return;
+    if (!r || !question) return;
 
     setSelectedQuestion(question);
 
@@ -66,12 +66,10 @@ export default function MappingPage() {
     }
   }
 
-  const handleSelectAndSwitchTab = (question) => {
+  // When mobile/tablet user clicks a question: select it AND switch tab to Answer Sheet
+  const handleSelectQuestion = (question) => {
     selectQuestion(question);
-    // On small screens, smoothly switch to answer sheet to show the highlight
-    if (typeof window !== 'undefined' && window.innerWidth <= 900) {
-      setActiveTab('answerSheet');
-    }
+    setActiveTab('answerSheet');
   };
 
   if (!result) {
@@ -106,7 +104,7 @@ export default function MappingPage() {
       <div className="main-content">
         <TopBar breadcrumb="Exams / Mapping" onBack={() => router.push('/')} />
 
-        {/* Mobile / Tablet Segmented Pill Tab Switcher */}
+        {/* Pill-shaped Segmented Tab Switcher (Visible on mobile/tablet) */}
         <div className="mobile-tab-container">
           <div className="mobile-tab-switcher">
             <button
@@ -132,7 +130,7 @@ export default function MappingPage() {
             questions={result.questions || []}
             mappings={result.mappings || []}
             selectedId={selectedQuestion?.id}
-            onSelect={handleSelectAndSwitchTab}
+            onSelect={handleSelectQuestion}
             unmatchedRegions={result.unmatchedRegions || []}
             className={activeTab !== 'questions' ? 'mobile-hidden' : ''}
           />
