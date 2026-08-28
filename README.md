@@ -4,7 +4,7 @@ A web application for teachers to upload a question paper and a student's handwr
 
 ## Live Demo
 
-> **Deployed on Netlify** — [Link added after deployment]
+> **Deployed on Netlify** — [https://veda-ai-asgmt.netlify.app/]
 
 ---
 
@@ -124,28 +124,6 @@ npm run dev
 | `GEMINI_API_KEY` | Google Gemini API key | Yes |
 
 The API key is **only used server-side** and never exposed to the browser.
-
----
-
-## Deployment
-
-### Netlify
-
-1. Connect the `vedaAI_Assignment` repository to Netlify
-2. Set **Base directory** to `frontend`
-3. Set **Build command** to `npm run build`
-4. Set **Publish directory** to `frontend/.next`
-5. Add environment variable: `GEMINI_API_KEY`
-6. Install the **Netlify Next.js plugin** (usually auto-detected)
-
-Or deploy via Netlify CLI:
-```bash
-cd frontend
-npm install -g netlify-cli
-netlify init
-netlify env:set GEMINI_API_KEY your_key_here
-netlify deploy --prod
-```
 
 ---
 
