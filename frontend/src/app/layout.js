@@ -4,7 +4,7 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'VedaAI — AI Assessment Extraction & Answer Mapping',
+  title: 'VedaAI',
   description:
     'Upload a question paper and student answer sheet. AI extracts questions and maps each answer to its highlighted region on the answer sheet.',
 };

@@ -88,6 +88,33 @@ Important rules:
 - Return only the JSON object, no markdown
 `;
 
+const CANDIDATE_MODELS = [
+  process.env.GEMINI_MODEL,
+  'gemini-3.6-flash',
+  'gemini-2.5-flash',
+  'gemini-1.5-flash',
+].filter(Boolean);
+
+async function generateWithFallback(parts) {
+  let lastError = null;
+  for (const modelName of CANDIDATE_MODELS) {
+    try {
+      const model = getModel(modelName);
+      const result = await model.generateContent(parts);
+      return result;
+    } catch (err) {
+      console.warn(`[gemini] Model ${modelName} failed:`, err.message);
+      lastError = err;
+      // If error is 404/not available, try next model
+      if (err.message?.includes('404') || err.message?.includes('not found') || err.message?.includes('no longer available')) {
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastError;
+}
+
 export async function POST(request) {
   try {
     const formData = await request.formData();
@@ -111,10 +138,8 @@ export async function POST(request) {
     const questionPaperMime = questionPaperFile.type || 'application/pdf';
     const answerSheetMime = answerSheetFile.type || 'application/pdf';
 
-    // Call Gemini
-    const model = getModel();
-
-    const result = await model.generateContent([
+    // Call Gemini with fallback support
+    const result = await generateWithFallback([
       {
         inlineData: {
           mimeType: questionPaperMime,

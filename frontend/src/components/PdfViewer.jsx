@@ -10,24 +10,19 @@ import {
 } from '@hugeicons/core-free-icons';
 
 /**
- * PdfViewer — renders PDF pages using pdfjs-dist and overlays answer highlights with Figma-styled badges.
- *
- * Props:
- *   fileUrl      - object URL (string) for the PDF file
- *   highlights   - array of { page, bbox: {x,y,w,h}, questionLabel } in normalized 0-1 coords
- *   currentPage  - page to scroll to when selected question changes
- *   onPageChange - callback(pageNum)
+ * PdfViewer — renders PDF pages using pdfjs-dist with dark toolbar and Figma green pin highlights.
  */
 export default function PdfViewer({
   fileUrl,
   highlights = [],
   currentPage = 1,
   onPageChange,
+  className = '',
 }) {
   const containerRef = useRef(null);
-  const [pages, setPages] = useState([]); // array of { pageNum, canvas, width, height }
+  const [pages, setPages] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
-  const [zoom, setZoom] = useState(1.2);
+  const [zoom, setZoom] = useState(1.1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const pdfDocRef = useRef(null);
@@ -44,10 +39,7 @@ export default function PdfViewer({
       setPages([]);
 
       try {
-        // Dynamic import of pdfjs-dist (client-side only)
         const pdfjsLib = await import('pdfjs-dist');
-
-        // Set worker source
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
         const loadingTask = pdfjsLib.getDocument(fileUrl);
@@ -58,7 +50,6 @@ export default function PdfViewer({
         pdfDocRef.current = pdfDoc;
         setTotalPages(pdfDoc.numPages);
 
-        // Render all pages
         const renderedPages = [];
         for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
           if (cancelled) break;
@@ -82,7 +73,6 @@ export default function PdfViewer({
             height: viewport.height,
           });
 
-          // Update state incrementally so pages appear as they render
           setPages([...renderedPages]);
         }
       } catch (err) {
@@ -104,12 +94,11 @@ export default function PdfViewer({
     };
   }, [fileUrl, zoom]);
 
-  // Re-render when zoom changes
   const handleZoom = useCallback(
     (direction) => {
       setZoom((prev) => {
-        const next = direction === 'in' ? prev + 0.2 : prev - 0.2;
-        return Math.max(0.5, Math.min(3.0, next));
+        const next = direction === 'in' ? prev + 0.15 : prev - 0.15;
+        return Math.max(0.5, Math.min(2.5, next));
       });
     },
     []
@@ -136,37 +125,38 @@ export default function PdfViewer({
     onPageChange?.(next);
   };
 
-  // Get highlights for a specific page
   function getPageHighlights(pageNum) {
     return highlights.filter((h) => h.page === pageNum);
   }
 
   if (!fileUrl) {
     return (
-      <div className="pdf-no-file">
-        <span>No document loaded</span>
+      <div className={`viewer-panel ${className}`}>
+        <div className="pdf-no-file">
+          <span>No document loaded</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="viewer-panel">
-      {/* Toolbar */}
+    <div className={`viewer-panel ${className}`}>
+      {/* Dark Toolbar */}
       <div className="viewer-toolbar">
-        <span className="viewer-toolbar-title">Answer Sheet</span>
+        <span className="viewer-toolbar-title desktop-only">Answer Sheet</span>
         <div className="viewer-toolbar-spacer" />
 
-        {/* Zoom controls */}
-        <div className="viewer-zoom">
+        {/* Zoom controls pill */}
+        <div className="viewer-pill-control">
           <button
             type="button"
             onClick={() => handleZoom('out')}
             title="Zoom out"
             aria-label="Zoom out"
           >
-            <HugeiconsIcon icon={Remove01Icon} size={14} />
+            <HugeiconsIcon icon={Remove01Icon} size={13} />
           </button>
-          <span style={{ minWidth: '40px', textAlign: 'center', fontSize: 12, fontWeight: 600 }}>
+          <span style={{ minWidth: '42px', textAlign: 'center', fontSize: 11, fontWeight: 600 }}>
             {Math.round(zoom * 100)}%
           </span>
           <button
@@ -175,22 +165,22 @@ export default function PdfViewer({
             title="Zoom in"
             aria-label="Zoom in"
           >
-            <HugeiconsIcon icon={Add01Icon} size={14} />
+            <HugeiconsIcon icon={Add01Icon} size={13} />
           </button>
         </div>
 
-        {/* Page navigation */}
+        {/* Page navigation pill */}
         {totalPages > 0 && (
-          <div className="viewer-page-nav" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <div className="viewer-pill-control">
             <button
               type="button"
               onClick={handlePrevPage}
               disabled={currentPage <= 1}
               aria-label="Previous page"
             >
-              <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={13} />
             </button>
-            <span style={{ fontSize: 12, fontWeight: 500, padding: '0 4px' }}>
+            <span style={{ fontSize: 11, fontWeight: 500, padding: '0 4px' }}>
               Page {currentPage} of {totalPages}
             </span>
             <button
@@ -199,7 +189,7 @@ export default function PdfViewer({
               disabled={currentPage >= totalPages}
               aria-label="Next page"
             >
-              <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
+              <HugeiconsIcon icon={ArrowRight01Icon} size={13} />
             </button>
           </div>
         )}
@@ -208,8 +198,8 @@ export default function PdfViewer({
       {/* Page scroll area */}
       <div className="viewer-scroll" ref={containerRef}>
         {loading && pages.length === 0 && (
-          <div style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>
-            Loading PDF...
+          <div style={{ color: '#A1A1AA', fontSize: 13, marginTop: 40 }}>
+            Loading Answer Sheet...
           </div>
         )}
 
@@ -230,10 +220,14 @@ export default function PdfViewer({
               {/* Canvas */}
               <CanvasDisplay canvas={canvas} width={width} height={height} />
 
-              {/* Highlight overlays */}
+              {/* Highlight overlays with green tag pin */}
               {pageHighlights.map((hl, idx) => {
                 const { x, y, w, h } = hl.bbox;
-                const label = hl.questionLabel ? (String(hl.questionLabel).startsWith('Q') ? hl.questionLabel : `Q${hl.questionLabel}`) : null;
+                const label = hl.questionLabel
+                  ? String(hl.questionLabel).startsWith('Q')
+                    ? hl.questionLabel
+                    : `Q${hl.questionLabel}`
+                  : 'Q';
 
                 return (
                   <div
@@ -246,25 +240,9 @@ export default function PdfViewer({
                       height: `${h * 100}%`,
                     }}
                   >
-                    {label && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: -12,
-                          left: -4,
-                          background: '#16A34A',
-                          color: 'white',
-                          fontSize: 10,
-                          fontWeight: 700,
-                          padding: '1px 6px',
-                          borderRadius: '4px',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                          lineHeight: '14px',
-                        }}
-                      >
-                        {label}
-                      </div>
-                    )}
+                    <div className="pdf-highlight-pin">
+                      {label}
+                    </div>
                   </div>
                 );
               })}

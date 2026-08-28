@@ -16,6 +16,7 @@ export default function MappingPage() {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeHighlights, setActiveHighlights] = useState([]);
+  const [activeTab, setActiveTab] = useState('questions'); // 'questions' | 'answerSheet'
 
   // Load data from sessionStorage
   useEffect(() => {
@@ -23,7 +24,6 @@ export default function MappingPage() {
     const url = sessionStorage.getItem('veda_answer_url');
 
     if (!raw || !url) {
-      // No data — redirect to upload
       router.replace('/');
       return;
     }
@@ -33,7 +33,6 @@ export default function MappingPage() {
       setResult(parsed);
       setAnswerSheetUrl(url);
 
-      // Auto-select first question
       if (parsed.questions?.length > 0) {
         selectQuestion(parsed.questions[0], parsed);
       }
@@ -49,26 +48,31 @@ export default function MappingPage() {
 
     setSelectedQuestion(question);
 
-    // Find the mapping for this question
-    const mapping = r.mappings.find((m) => m.questionId === question.id);
+    const mapping = r.mappings?.find((m) => m.questionId === question.id);
 
     if (!mapping || mapping.status !== 'matched') {
       setActiveHighlights([]);
       return;
     }
 
-    // Find answer regions for this mapping
-    const regions = r.answerRegions.filter((ar) =>
+    const regions = r.answerRegions?.filter((ar) =>
       mapping.answerRegionIds.includes(ar.id)
-    );
+    ) || [];
 
     setActiveHighlights(regions);
 
-    // Navigate to first page of the answer
     if (regions.length > 0) {
       setCurrentPage(regions[0].page);
     }
   }
+
+  const handleSelectAndSwitchTab = (question) => {
+    selectQuestion(question);
+    // On small screens, smoothly switch to answer sheet to show the highlight
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setActiveTab('answerSheet');
+    }
+  };
 
   if (!result) {
     return (
@@ -88,7 +92,7 @@ export default function MappingPage() {
               gap: 12,
             }}
           >
-            <HugeiconsIcon icon={SparklesIcon} size={28} style={{ color: 'var(--color-brand)' }} />
+            <HugeiconsIcon icon={SparklesIcon} size={32} style={{ color: 'var(--color-brand)' }} />
             <span>Loading mapping workspace...</span>
           </div>
         </div>
@@ -102,22 +106,44 @@ export default function MappingPage() {
       <div className="main-content">
         <TopBar breadcrumb="Exams / Mapping" onBack={() => router.push('/')} />
 
+        {/* Mobile / Tablet Segmented Tab Switcher */}
+        <div className="mobile-tab-container">
+          <div className="mobile-tab-switcher">
+            <button
+              type="button"
+              className={`mobile-tab-btn ${activeTab === 'questions' ? 'active' : ''}`}
+              onClick={() => setActiveTab('questions')}
+            >
+              Questions
+            </button>
+            <button
+              type="button"
+              className={`mobile-tab-btn ${activeTab === 'answerSheet' ? 'active' : ''}`}
+              onClick={() => setActiveTab('answerSheet')}
+            >
+              Answer Sheet
+            </button>
+          </div>
+        </div>
+
         <div className="mapping-screen">
-          {/* Left: Question list */}
+          {/* Left panel: Question list */}
           <QuestionList
-            questions={result.questions}
-            mappings={result.mappings}
+            questions={result.questions || []}
+            mappings={result.mappings || []}
             selectedId={selectedQuestion?.id}
-            onSelect={(q) => selectQuestion(q, result)}
-            unmatchedRegions={result.unmatchedRegions}
+            onSelect={handleSelectAndSwitchTab}
+            unmatchedRegions={result.unmatchedRegions || []}
+            className={activeTab !== 'questions' ? 'mobile-hidden' : ''}
           />
 
-          {/* Right: PDF viewer */}
+          {/* Right panel: PDF viewer */}
           <PdfViewer
             fileUrl={answerSheetUrl}
             highlights={activeHighlights}
             currentPage={currentPage}
             onPageChange={setCurrentPage}
+            className={activeTab !== 'answerSheet' ? 'mobile-hidden' : ''}
           />
         </div>
       </div>

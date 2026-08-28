@@ -54,7 +54,7 @@ The application is a **monorepo** where Next.js API routes serve as the backend.
 
 ## AI Model & API
 
-**Model:** `gemini-2.0-flash`
+**Model:** `gemini-3.6-flash` (with automatic fallback)
 
 **SDK:** `@google/generative-ai` (official Google Generative AI SDK for Node.js)
 

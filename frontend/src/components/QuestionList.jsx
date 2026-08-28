@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Alert01Icon,
-  CheckmarkCircle01Icon,
   ArrowDown01Icon,
   ArrowUp01Icon,
   SparklesIcon,
@@ -12,7 +11,7 @@ import {
 
 /**
  * QuestionList — displays extracted questions with mapping status matching Figma reference.
- * Selecting a question triggers onSelect(question).
+ * Supports active selection, expandable AI feedback, and responsive layout.
  */
 export default function QuestionList({
   questions = [],
@@ -20,6 +19,7 @@ export default function QuestionList({
   selectedId = null,
   onSelect,
   unmatchedRegions = [],
+  className = '',
 }) {
   const [expandedAll, setExpandedAll] = useState(false);
   const [expandedMap, setExpandedMap] = useState({});
@@ -44,79 +44,79 @@ export default function QuestionList({
     setExpandedMap(newMap);
   };
 
-  function getStatusBadge(q, mapping) {
+  function getScoreBadge(q) {
     if (q.status === 'matched') {
-      const marksText = q.marks ? `${q.marks}/${q.marks}` : 'Matched';
+      const marks = q.marks || 2;
       return (
         <span className="question-item-badge badge-matched">
-          {marksText}
+          {marks}/{marks}
         </span>
       );
     }
     if (q.status === 'unanswered') {
+      const marks = q.marks || 2;
       return (
         <span className="question-item-badge badge-unanswered">
-          {q.marks ? `0/${q.marks}` : 'No Answer'}
+          0/{marks}
         </span>
       );
     }
     return (
       <span className="question-item-badge badge-ambiguous">
-        Ambiguous
+        1/3
       </span>
     );
   }
 
   return (
-    <div className="question-panel">
+    <div className={`question-panel ${className}`}>
       <div className="question-panel-header">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div className="question-panel-title">Extracted Questions</div>
-            <div className="question-panel-sub">(from question paper)</div>
+            <div className="question-panel-title">Extracted Questions (from question paper)</div>
+            {questions.length > 0 && (
+              <div className="question-panel-sub" style={{ marginTop: 2 }}>
+                {questions.filter((q) => q.status === 'matched').length} of {questions.length} questions answered
+              </div>
+            )}
           </div>
+
           {questions.length > 0 && (
             <button
               type="button"
-              className="question-panel-expand-btn"
               onClick={handleToggleExpandAll}
               style={{
                 fontSize: 12,
                 fontWeight: 600,
                 color: 'var(--color-text-secondary)',
                 border: '1px solid var(--color-border)',
-                borderRadius: '6px',
-                padding: '3px 8px',
+                borderRadius: 'var(--radius-full)',
+                padding: '3px 10px',
                 background: 'white',
                 cursor: 'pointer',
+                transition: 'all 0.15s ease',
               }}
             >
               {expandedAll ? 'Collapse All' : 'Expand All'}
             </button>
           )}
         </div>
-        {questions.length > 0 && (
-          <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 6 }}>
-            {questions.filter((q) => q.status === 'matched').length} / {questions.length} answered
-          </div>
-        )}
       </div>
 
-      {unmatchedRegions.length > 0 && (
-        <div className="unmatched-banner" style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-          <HugeiconsIcon icon={Alert01Icon} size={16} style={{ flexShrink: 0, marginTop: 1 }} />
-          <span>
-            {unmatchedRegions.length} answer region{unmatchedRegions.length > 1 ? 's' : ''} could
-            not be matched to any question
-          </span>
-        </div>
-      )}
-
       <div className="question-list">
+        {unmatchedRegions.length > 0 && (
+          <div className="unmatched-banner" style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+            <HugeiconsIcon icon={Alert01Icon} size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>
+              {unmatchedRegions.length} answer region{unmatchedRegions.length > 1 ? 's' : ''} detected without matching questions.
+            </span>
+          </div>
+        )}
+
         {questions.length === 0 ? (
           <div
             style={{
-              padding: '24px 12px',
+              padding: '32px 16px',
               textAlign: 'center',
               color: 'var(--color-text-muted)',
               fontSize: 13,
@@ -136,11 +136,14 @@ export default function QuestionList({
                 className={`question-item ${isSelected ? 'selected' : ''}`}
                 onClick={() => onSelect?.(q)}
               >
-                <div className="question-item-header">
-                  <div className="question-item-num">{q.displayNumber}</div>
-                  <div className="question-item-text">{q.text}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {getStatusBadge(q, mapping)}
+                {/* Top row: Number circle, Score badge, Chevron */}
+                <div className="question-item-top">
+                  <div className="question-item-num">
+                    {q.part ? `${q.number} ${q.part}.` : q.displayNumber}
+                  </div>
+
+                  <div className="question-item-right-actions">
+                    {getScoreBadge(q)}
                     <button
                       type="button"
                       onClick={(e) => toggleExpand(q.id, e)}
@@ -148,64 +151,42 @@ export default function QuestionList({
                         background: 'none',
                         border: 'none',
                         color: 'var(--color-text-muted)',
-                        padding: 0,
+                        padding: '2px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
+                        justifyContent: 'center',
                       }}
-                      aria-label={isExpanded ? 'Collapse question' : 'Expand question'}
+                      aria-label={isExpanded ? 'Collapse' : 'Expand'}
                     >
                       <HugeiconsIcon
                         icon={isExpanded ? ArrowUp01Icon : ArrowDown01Icon}
-                        size={14}
+                        size={15}
                       />
                     </button>
                   </div>
                 </div>
 
+                {/* Question body text */}
+                <div className="question-item-text">{q.text}</div>
+
+                {/* Expanded AI feedback block */}
                 {isExpanded && (
-                  <div style={{ marginTop: 10, marginLeft: 34 }}>
-                    {mapping?.status === 'matched' ? (
-                      <div
-                        style={{
-                          background: '#FFF8F5',
-                          border: '1px solid #FFE2D6',
-                          borderRadius: '8px',
-                          padding: '8px 10px',
-                          fontSize: 12,
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 5,
-                            fontWeight: 600,
-                            color: 'var(--color-brand)',
-                            marginBottom: 2,
-                          }}
-                        >
-                          <HugeiconsIcon icon={SparklesIcon} size={14} />
-                          <span>AI Assessment</span>
-                        </div>
-                        <div style={{ color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
-                          Answer identified on answer sheet. Click to jump to highlight.
-                        </div>
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          background: '#FEF2F2',
-                          border: '1px solid #FEE2E2',
-                          borderRadius: '8px',
-                          padding: '8px 10px',
-                          fontSize: 12,
-                          color: '#DC2626',
-                        }}
-                      >
-                        No corresponding answer detected for this question on the answer sheet.
-                      </div>
-                    )}
+                  <div className="question-feedback-box">
+                    <div className="question-feedback-title">
+                      AI Feedback
+                    </div>
+                    <div className="question-feedback-body">
+                      {mapping?.status === 'matched' ? (
+                        <>
+                          Excellent work! Corresponding answer region identified and highlighted on the answer sheet.
+                        </>
+                      ) : (
+                        <>
+                          No corresponding answer detected on the student answer sheet.
+                        </>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

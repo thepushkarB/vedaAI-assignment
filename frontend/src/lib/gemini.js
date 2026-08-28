@@ -1,6 +1,6 @@
 /**
  * Gemini API client — server-side only.
- * Uses @google/generative-ai SDK with gemini-2.0-flash model.
+ * Uses @google/generative-ai SDK with the latest Gemini model.
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -13,9 +13,11 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey || 'placeholder');
 
-export function getModel() {
+const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+
+export function getModel(modelName = MODEL_NAME) {
   return genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
+    model: modelName,
     generationConfig: {
       responseMimeType: 'application/json',
     },

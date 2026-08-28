@@ -25,7 +25,6 @@ export default function Sidebar() {
     <aside className="sidebar">
       {/* Logo */}
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon">V</div>
         <span className="sidebar-logo-text">VedaAI</span>
       </div>
 
@@ -62,8 +61,8 @@ export default function Sidebar() {
           <HugeiconsIcon icon={SchoolIcon} size={18} />
         </div>
         <div className="sidebar-footer-info">
-          <div className="sidebar-footer-name">Delhi Public School</div>
-          <div className="sidebar-footer-sub">Bokaro Steel City</div>
+          <div className="sidebar-footer-name">The Xavier School</div>
+          <div className="sidebar-footer-sub">New York</div>
         </div>
       </div>
     </aside>
