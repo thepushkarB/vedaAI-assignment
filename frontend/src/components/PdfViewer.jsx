@@ -1,13 +1,20 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  Add01Icon,
+  Remove01Icon,
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+} from '@hugeicons/core-free-icons';
 
 /**
- * PdfViewer — renders PDF pages using pdfjs-dist and overlays answer highlights.
+ * PdfViewer — renders PDF pages using pdfjs-dist and overlays answer highlights with Figma-styled badges.
  *
  * Props:
  *   fileUrl      - object URL (string) for the PDF file
- *   highlights   - array of { page, bbox: {x,y,w,h} } in normalized 0-1 coords
+ *   highlights   - array of { page, bbox: {x,y,w,h}, questionLabel } in normalized 0-1 coords
  *   currentPage  - page to scroll to when selected question changes
  *   onPageChange - callback(pageNum)
  */
@@ -24,7 +31,6 @@ export default function PdfViewer({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const pdfDocRef = useRef(null);
-  const renderingRef = useRef(false);
 
   // Load PDF when fileUrl changes
   useEffect(() => {
@@ -120,6 +126,16 @@ export default function PdfViewer({
     }
   }, [currentPage, pages]);
 
+  const handlePrevPage = () => {
+    const next = Math.max(1, currentPage - 1);
+    onPageChange?.(next);
+  };
+
+  const handleNextPage = () => {
+    const next = Math.min(totalPages, currentPage + 1);
+    onPageChange?.(next);
+  };
+
   // Get highlights for a specific page
   function getPageHighlights(pageNum) {
     return highlights.filter((h) => h.page === pageNum);
@@ -142,17 +158,49 @@ export default function PdfViewer({
 
         {/* Zoom controls */}
         <div className="viewer-zoom">
-          <button onClick={() => handleZoom('out')} title="Zoom out">−</button>
-          <span>{Math.round(zoom * 100)}%</span>
-          <button onClick={() => handleZoom('in')} title="Zoom in">+</button>
+          <button
+            type="button"
+            onClick={() => handleZoom('out')}
+            title="Zoom out"
+            aria-label="Zoom out"
+          >
+            <HugeiconsIcon icon={Remove01Icon} size={14} />
+          </button>
+          <span style={{ minWidth: '40px', textAlign: 'center', fontSize: 12, fontWeight: 600 }}>
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            type="button"
+            onClick={() => handleZoom('in')}
+            title="Zoom in"
+            aria-label="Zoom in"
+          >
+            <HugeiconsIcon icon={Add01Icon} size={14} />
+          </button>
         </div>
 
-        {/* Page info */}
+        {/* Page navigation */}
         {totalPages > 0 && (
-          <div className="viewer-page-nav">
-            <span>
+          <div className="viewer-page-nav" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button
+              type="button"
+              onClick={handlePrevPage}
+              disabled={currentPage <= 1}
+              aria-label="Previous page"
+            >
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
+            </button>
+            <span style={{ fontSize: 12, fontWeight: 500, padding: '0 4px' }}>
               Page {currentPage} of {totalPages}
             </span>
+            <button
+              type="button"
+              onClick={handleNextPage}
+              disabled={currentPage >= totalPages}
+              aria-label="Next page"
+            >
+              <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
+            </button>
           </div>
         )}
       </div>
@@ -185,6 +233,8 @@ export default function PdfViewer({
               {/* Highlight overlays */}
               {pageHighlights.map((hl, idx) => {
                 const { x, y, w, h } = hl.bbox;
+                const label = hl.questionLabel ? (String(hl.questionLabel).startsWith('Q') ? hl.questionLabel : `Q${hl.questionLabel}`) : null;
+
                 return (
                   <div
                     key={idx}
@@ -195,7 +245,27 @@ export default function PdfViewer({
                       width: `${w * 100}%`,
                       height: `${h * 100}%`,
                     }}
-                  />
+                  >
+                    {label && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: -12,
+                          left: -4,
+                          background: '#16A34A',
+                          color: 'white',
+                          fontSize: 10,
+                          fontWeight: 700,
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                          lineHeight: '14px',
+                        }}
+                      >
+                        {label}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -208,8 +278,6 @@ export default function PdfViewer({
 
 /**
  * CanvasDisplay — renders an existing canvas element into the DOM.
- * We need to use a ref to append the canvas because React doesn't
- * manage actual <canvas> elements with pixel data.
  */
 function CanvasDisplay({ canvas, width, height }) {
   const ref = useRef(null);

@@ -4,6 +4,16 @@ import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import TopBar from '@/components/TopBar';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  Upload01Icon,
+  Pdf01Icon,
+  Cancel01Icon,
+  SparklesIcon,
+  TeacherIcon,
+  ArrowRight01Icon,
+  Alert01Icon,
+} from '@hugeicons/core-free-icons';
 
 const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE_MB = 20;
@@ -13,7 +23,7 @@ function formatSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function UploadZone({ label, file, onFile, onClear, accept }) {
+function UploadZone({ label, file, onFile, onClear }) {
   const inputRef = useRef(null);
   const [dragover, setDragover] = useState(false);
 
@@ -43,7 +53,10 @@ function UploadZone({ label, file, onFile, onClear, accept }) {
     <div
       className={`upload-zone ${dragover ? 'dragover' : ''} ${file ? 'has-file' : ''}`}
       onClick={() => !file && inputRef.current?.click()}
-      onDragOver={(e) => { e.preventDefault(); setDragover(true); }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragover(true);
+      }}
       onDragLeave={() => setDragover(false)}
       onDrop={handleDrop}
     >
@@ -62,14 +75,20 @@ function UploadZone({ label, file, onFile, onClear, accept }) {
       {file ? (
         <>
           <button
+            type="button"
             className="upload-zone-clear"
-            onClick={(e) => { e.stopPropagation(); onClear(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClear();
+            }}
             title="Remove file"
           >
-            ×
+            <HugeiconsIcon icon={Cancel01Icon} size={14} />
           </button>
           <div className="upload-zone-file">
-            <div className="upload-zone-file-icon">PDF</div>
+            <div className="upload-zone-file-icon">
+              <HugeiconsIcon icon={Pdf01Icon} size={20} />
+            </div>
             <div className="upload-zone-file-info">
               <div className="upload-zone-file-name">{file.name}</div>
               <div className="upload-zone-file-meta">{formatSize(file.size)}</div>
@@ -79,11 +98,7 @@ function UploadZone({ label, file, onFile, onClear, accept }) {
       ) : (
         <>
           <div className="upload-zone-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
+            <HugeiconsIcon icon={Upload01Icon} size={32} />
           </div>
           <div className="upload-zone-label">
             Upload <span>{label}</span>
@@ -158,18 +173,17 @@ export default function UploadPage() {
           <div className="processing-screen">
             {/* Sparkle animation */}
             <div className="processing-sparkle">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l1.5 5.5L19 9l-5.5 1.5L12 16l-1.5-5.5L5 9l5.5-1.5z"/>
-              </svg>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{ marginTop: -12 }}>
-                <path d="M19 3l0.75 2.75L22.5 6.5l-2.75.75L19 10l-.75-2.75L15.5 6.5l2.75-.75z"/>
-              </svg>
+              <HugeiconsIcon
+                icon={SparklesIcon}
+                size={48}
+                style={{ color: 'var(--color-brand)' }}
+              />
             </div>
 
             <div className="processing-title">Extracting...</div>
             <div className="processing-sub">This may take a while</div>
 
-            <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
                 'Extracting questions from question paper',
                 'Analysing answer sheet regions',
@@ -181,7 +195,7 @@ export default function UploadPage() {
                 return (
                   <div key={i} className={`processing-step ${isCurrent ? 'active' : ''}`}>
                     <div className="processing-step-dot" />
-                    {step}
+                    <span>{step}</span>
                   </div>
                 );
               })}
@@ -203,10 +217,11 @@ export default function UploadPage() {
           <div className="upload-hero">
             <div className="upload-avatar">
               <div className="upload-avatar-ring">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <circle cx="12" cy="8" r="4"/>
-                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                </svg>
+                <HugeiconsIcon
+                  icon={TeacherIcon}
+                  size={36}
+                  style={{ color: 'var(--color-brand)' }}
+                />
               </div>
             </div>
             <h1>
@@ -234,11 +249,13 @@ export default function UploadPage() {
           {/* CTA */}
           <div className="upload-cta">
             <button
+              type="button"
               className="btn btn-primary"
               disabled={!canStart}
               onClick={handleStartMapping}
             >
-              Start Mapping →
+              <span>Start Mapping</span>
+              <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
             </button>
             <p className="upload-footer-note">
               Once both files are uploaded, you&apos;ll be able to map answers with questions
@@ -247,8 +264,9 @@ export default function UploadPage() {
 
           {/* Error */}
           {error && (
-            <div className="error-message">
-              ⚠ {error}
+            <div className="error-message" style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+              <HugeiconsIcon icon={Alert01Icon} size={18} />
+              <span>{error}</span>
             </div>
           )}
         </div>

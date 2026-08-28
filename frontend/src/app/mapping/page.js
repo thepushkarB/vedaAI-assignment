@@ -6,6 +6,8 @@ import Sidebar from '@/components/Sidebar';
 import TopBar from '@/components/TopBar';
 import QuestionList from '@/components/QuestionList';
 import PdfViewer from '@/components/PdfViewer';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { SparklesIcon } from '@hugeicons/core-free-icons';
 
 export default function MappingPage() {
   const router = useRouter();
@@ -73,18 +75,21 @@ export default function MappingPage() {
       <div className="app-shell">
         <Sidebar />
         <div className="main-content">
-          <TopBar />
+          <TopBar breadcrumb="Exams / Mapping" onBack={() => router.push('/')} />
           <div
             style={{
               flex: 1,
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'var(--color-text-muted)',
               fontSize: 14,
+              gap: 12,
             }}
           >
-            Loading...
+            <HugeiconsIcon icon={SparklesIcon} size={28} style={{ color: 'var(--color-brand)' }} />
+            <span>Loading mapping workspace...</span>
           </div>
         </div>
       </div>
@@ -95,7 +100,7 @@ export default function MappingPage() {
     <div className="app-shell">
       <Sidebar />
       <div className="main-content">
-        <TopBar breadcrumb="Exams / Mapping" />
+        <TopBar breadcrumb="Exams / Mapping" onBack={() => router.push('/')} />
 
         <div className="mapping-screen">
           {/* Left: Question list */}

@@ -10,14 +10,14 @@ A web application for teachers to upload a question paper and a student's handwr
 
 ## Features
 
-- 📤 **Upload** — drag-and-drop or click to upload question paper + answer sheet (PDF or images)
-- 🤖 **AI Extraction** — Gemini 2.0 Flash multimodal model extracts all questions and finds answer regions
-- 🗺️ **Answer Mapping** — questions are automatically matched to answer regions using explicit question labels
-- 🔍 **Exact Highlighting** — clicking a question scrolls to and highlights the exact handwritten answer region
-- ✅ **Status tracking** — questions are shown as Answered, No Answer, or Ambiguous
-- ⚠️ **Unmatched answers** — answer regions that don't match any question are flagged rather than silently discarded
-- 📄 **Multi-page support** — answers spanning multiple pages are supported
-- 📱 **Responsive** — works on desktop and mobile
+- **Upload** — Drag-and-drop or click to upload question paper + answer sheet (PDF or images)
+- **AI Extraction** — Gemini 2.0 Flash multimodal model extracts all questions and finds answer regions
+- **Answer Mapping** — Questions are automatically matched to answer regions using explicit question labels
+- **Exact Highlighting** — Clicking a question scrolls to and highlights the exact handwritten answer region
+- **Status Tracking** — Questions are shown as Answered, No Answer, or Ambiguous
+- **Unmatched Answers** — Answer regions that don't match any question are flagged rather than silently discarded
+- **Multi-Page Support** — Answers spanning multiple pages are supported
+- **Responsive & Clean UI** — Designed according to the Figma specification with Hugeicons
 
 ---
 
@@ -44,7 +44,7 @@ vedaAI_Assignment/
 │       └── lib/
 │           ├── gemini.js        ← Gemini API client (server-only)
 │           └── normalizer.js    ← AI response normalization + mapping logic
-├── backend/                ← Empty (not used; Next.js API routes handle everything)
+├── backend/                ← Empty (Next.js API routes handle backend operations)
 └── README.md
 ```
 
@@ -73,8 +73,8 @@ Answers are mapped to questions using a **strongest-evidence-first** strategy:
 | Priority | Evidence Type | Example |
 |----------|--------------|---------|
 | 1 (strongest) | Explicit question label visible in answer | "Q1", "1", "11(a)" |
-| 2 | Label with prefix stripping | "Q2" → "2" |
-| 3 | Number-only fallback | "2a" → question "2" |
+| 2 | Label with prefix stripping | "Q2" -> "2" |
+| 3 | Number-only fallback | "2a" -> question "2" |
 | 4 (weakest) | Unmatched — flagged as unmatched | shown in warning banner |
 
 - Sub-parts (11a, 11b) are treated as separate questions
@@ -121,7 +121,7 @@ npm run dev
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `GEMINI_API_KEY` | Google Gemini API key | ✅ Yes |
+| `GEMINI_API_KEY` | Google Gemini API key | Yes |
 
 The API key is **only used server-side** and never exposed to the browser.
 
@@ -174,6 +174,7 @@ netlify deploy --prod
 | Framework | Next.js 16 (App Router) |
 | Language | JavaScript (no TypeScript) |
 | AI | Gemini 2.0 Flash (multimodal) |
+| Icons | @hugeicons/react & @hugeicons/core-free-icons |
 | PDF Rendering | pdfjs-dist (client-side) |
 | Styling | Vanilla CSS + CSS custom properties |
 | Deployment | Netlify |
